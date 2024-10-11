@@ -11,6 +11,6 @@ export const signupSchema = Joi.object({
 export const loginSchema = Joi.object({
     email: Joi.string().email().min(3).max(100).required(),
     password: Joi.string().min(8).max(100).required(),
-    fcmToken: Joi.string().email().min(3).max(3000),
+    fcmToken: Joi.string().min(3).max(3000),
 }).unknown(false);
 

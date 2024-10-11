@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { RegisterPayload } from "../interfaces/user.interface";
 import { Session } from "../models/session.schema";
+import mongoose from "mongoose";
 
 const JWT_SECRET = 'THIS IS MY SECRET';
 
@@ -52,4 +53,10 @@ export const login = async (email: string, password: string, fcmToken: string)=>
             createdAt: user.createdAt
         }
     }
+}
+
+export const profile = async (userId: String | mongoose.Types.ObjectId)=>{
+    const user = await User.findById(userId, "name username firstName lastName email createdAt");
+    if(!user) throw Errors.UNAUTHORIZED;
+    return user;
 }

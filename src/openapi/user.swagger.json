@@ -60,6 +60,24 @@
           }
         }
       }
+    },
+    "/auth/profile": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "User profile",
+        "security":[
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -97,22 +115,33 @@
             "default": "abc@1234"
           }
         }
+      },
+      "userLogin": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "description": "Enter your email or username",
+            "type": "string",
+            "format": "email",
+            "default": "parshantkhichi@gmail.com"
+          },
+          "password": {
+            "description": "Enter your password",
+            "type": "string",
+            "default": "abc@1234"
+          },
+          "fcmToken": {
+            "description": "Enter token",
+            "type": "string"
+          }
+        }
       }
     },
-    "userLogin": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "description": "Enter your email or username",
-          "type": "string",
-          "format": "email",
-          "default": "parshantkhichi@gmail.com"
-        },
-        "password": {
-          "description": "Enter your password",
-          "type": "string",
-          "default": "abc@1234"
-        }
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   }

@@ -1,6 +1,6 @@
 import {User} from '../models/user.schema';
-import {Request, Response} from "express";
-import { register,login } from '../services/userService'; 
+import {NextFunction, Request, Response} from "express";
+import { register,login, profile } from '../services/userService'; 
 import { handleCatch, handleResponse } from '../handlers/global.handler';
 export const registerUser = async (req: Request, res: Response)=>{
     try{    
@@ -16,6 +16,21 @@ export const loginUser = async (req: Request, res: Response)=>{
         const {email, password, fcmToken} = req.body;
         const result = await login(email, password, fcmToken);
         handleResponse(res, result);
+    }catch(error){
+        handleCatch(res, error);         
+    }
+}
+
+export const getProfile = async (req: Request, res: Response): Promise<any>=>{
+    try{
+    if (!req.userData) {
+        return res.status(401).json({ message: 'User data not found' });
+        }
+        const result = await profile(req.userData._id);
+        const data = {
+            data: result
+        }
+        handleResponse(res, data);
     }catch(error){
         handleCatch(res, error);         
     }
