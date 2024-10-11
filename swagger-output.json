@@ -1,0 +1,103 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Boilerplate",
+    "version": "1.0.0",
+    "description": "Boiler plate code APIs"
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Auth related apis"
+    }
+  ],
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "User register api",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/userSignup"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "User login api",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/userLogin"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/userLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "userSignup": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "description": "Enter your email",
+            "type": "string",
+            "format": "email",
+            "default": "parshantkhichi@gmail.com"
+          },
+          "firstName": {
+            "description": "Enter your firstname",
+            "type": "string",
+            "format": "email",
+            "default": "Parshant"
+          },
+          "lastName": {
+            "description": "Enter your lastName",
+            "type": "string",
+            "format": "email",
+            "default": "Khichi"
+          },
+          "username": {
+            "description": "Enter your username",
+            "type": "string",
+            "default": "parshantkhichi"
+          },
+          "password": {
+            "description": "Enter your password",
+            "type": "string",
+            "format": "password",
+            "default": "abc@1234"
+          }
+        }
+      }
+    }
+  }
+}
