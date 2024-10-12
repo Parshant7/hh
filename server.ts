@@ -20,6 +20,6 @@ initializeSocket(server);
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDoc))
 app.use("/auth",userRouter);
-app.listen(port,()=>{
+server.listen(port,()=>{
     console.log("server is listening")
 });

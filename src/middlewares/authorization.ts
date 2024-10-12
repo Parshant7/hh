@@ -38,7 +38,7 @@ function extractTokenFromHeader(req: Request){
     throw UNAUTHORIZED;
 }
 
-export const socketAuthorization = async (socket: Socket):Promise<IUser| void> => {
+export const socketAuthorization = async (socket: Socket, next: any):Promise<IUser| void> => {
     try {
         const [type, token] = socket.handshake.headers.authorization?.split(' ') ?? [];
         console.log(type, token);
@@ -55,7 +55,8 @@ export const socketAuthorization = async (socket: Socket):Promise<IUser| void> =
 
         const user = await User.findById(mongoose.Types.ObjectId.createFromHexString(decodedToken.userId));
         if(!user)  throw UNAUTHORIZED;
-        return user;
+        socket.userData = user;
+        next();
     } catch (error) {
         console.log("socket authorization> error ",error);
         handleSocketCatch(socket, error);
