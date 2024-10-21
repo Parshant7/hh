@@ -2,10 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { UNAUTHORIZED } from "../config/error.config";
 import jwt from "jsonwebtoken";
 import { handleCatch, handleSocketCatch } from "../handlers/global.handler";
-import { IUser, User } from "../models/user.schema";
-import mongoose from "mongoose";
-import { Session } from "../models/session.schema";
+import { SessionModel, UserModel } from "../models";
 import { Socket } from "socket.io";
+import { IUser } from "../interfaces/user.interface";
 const JWT_SECRET = 'THIS IS MY SECRET';
 
 export const authorization = async (req: Request, res: Response, next: NextFunction):Promise<void> => {
@@ -16,11 +15,12 @@ export const authorization = async (req: Request, res: Response, next: NextFunct
         console.log("decoded token ",decodedToken);
         if(!decodedToken)  throw UNAUTHORIZED;
 
-        const session = await Session.findById(mongoose.Types.ObjectId.createFromHexString(decodedToken.sessionId));
+        const session = await SessionModel.findByPk(decodedToken.sessionId);
         console.log("session ",session);
         if(!session)  throw UNAUTHORIZED;
 
-        const user = await User.findById(mongoose.Types.ObjectId.createFromHexString(decodedToken.userId));
+        const user = await UserModel.findByPk(decodedToken.userId);
+        console.log("user ",user)
         if(!user)  throw UNAUTHORIZED;
         req.userData = user;
 
@@ -49,11 +49,11 @@ export const socketAuthorization = async (socket: Socket, next: any):Promise<IUs
         console.log("decoded token ",decodedToken);
         if(!decodedToken)  throw UNAUTHORIZED;
 
-        const session = await Session.findById(mongoose.Types.ObjectId.createFromHexString(decodedToken.sessionId));
+        const session = await SessionModel.findByPk(decodedToken.sessionId);
         console.log("session ",session);
         if(!session)  throw UNAUTHORIZED;
 
-        const user = await User.findById(mongoose.Types.ObjectId.createFromHexString(decodedToken.userId));
+        const user = await UserModel.findByPk(decodedToken.userId);
         if(!user)  throw UNAUTHORIZED;
         socket.userData = user;
         next();

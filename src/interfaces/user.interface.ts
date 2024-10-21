@@ -7,11 +7,12 @@ export interface RegisterPayload {
 }
 
 export interface IUser {
+    id: number
     firstName: string,
     lastName: string
     username: string,
     email: string,
     password: string,
     createdAt: Date,
-    updateAt: Date
+    updatedAt: Date
 }

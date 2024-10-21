@@ -1,51 +1,154 @@
 import mongoose, { Types } from "mongoose";
-import { Chat, IChat } from "../models/chat.schema";
-import { ISendMessage } from "../interfaces/chat.interface";
-import { Message } from "../models/message.schema";
-import { User } from "../models/user.schema";
+import { UserModel, MessageModel, ChatUserModel, ChatModel } from "../models";
 import path from "path";
+import { Identifier, Op, Sequelize } from "sequelize";
+import { IChat, ISendMessage } from "../interfaces/chat.interface";
+import { handleSocketCatch } from "../handlers/global.handler";
 
-type MongoId = string | Types.ObjectId;
-
-export const findOrCreateChat = async (user1: MongoId, user2: MongoId)=>{
-    const user1Id = new mongoose.Types.ObjectId(user1);
-    const user2Id = new mongoose.Types.ObjectId(user2);
-
-    const chat = await Chat.findOne({users: {$all: [user1, user2]}});
-    if(chat) return chat;
-    return await Chat.create({users: [user1Id, user2Id]});
-}
-
-export const createMessage = async (payload: ISendMessage, userId: MongoId, chatId: MongoId)=>{
-    const newMessage = await Message.create({
-        content: payload.content,
-        sentBy: new mongoose.Types.ObjectId(userId),
-        chatId: new mongoose.Types.ObjectId(chatId)
+export const findOrCreateChat = async (
+  user1Id: Identifier,
+  user2Id: Identifier
+):Promise<IChat> => {
+  // const chat = await ChatUserModel.findOne({users: {$all: [user1, user2]}});
+  try {
+    console.log("userids ",user1Id, user2Id);
+    const chat = await ChatUserModel.findAll({
+      where: {
+        userId: {
+          [Op.in]: [user1Id, user2Id],
+        },
+      },
+      attributes: ["chatId"],
+      group: ["chatId"],
+      having: Sequelize.literal("Count(DISTINCT userId) = 2"),
     });
-    await Chat.findByIdAndUpdate(chatId,{$set: {lastMessage: newMessage._id}});
-    return await newMessage.populate("chatId sentBy");
-}
+    console.log('chats ',chat)
+    if (chat.length) {
+    
+      return await ChatModel.findByPk(chat[0].chatId, {
+        include: [
+          {
+            model: UserModel,
+            as: 'userDetails',
+            // include: [
+            //   {
+            //     model: UserModel,
+            //     as: 'userDetail',
+            //     attributes: ['id', 'username', 'email']
+            //   }
+            // ]
+          },
+        ],
+      });
+    }
+    const newChat = await ChatModel.create();
+    console.log(newChat);  // Will output the new chat entry
 
-export const getChatIds = async (userId: MongoId)=>{
-    const chats = await Chat.find({users: {$in: [userId]}}, "_id");
-    const chatIds = chats.map(chat=>{
-        return chat._id.toString;
+    await ChatUserModel.bulkCreate([
+      { chatId: newChat.id, userId: user1Id },
+      { chatId: newChat.id, userId: user2Id },
+    ]);
+    
+    return await ChatModel.findByPk(newChat.id, {
+      include: [
+        {
+          model: ChatUserModel,
+          include: [
+            {
+              model: UserModel,
+              attributes: ['id', 'username', 'email']
+            }
+          ]
+        },
+      ],
     });
-    return chatIds;
-}
+  } catch (error) {
+    console.log("error ",error);
+  
+  }
+  //todd pending
+};
 
-export const getAllChats = async (userId: MongoId)=>{
-    const chats = await Chat.find({users: {$in: [userId]}},{}, {sort: {updatedAt: -1}}).populate("lastMessage users");
-    return chats;
-}
+export const createMessage = async (
+  payload: ISendMessage,
+  userId: Identifier,
+  chatId: Identifier
+) => {
+  console.log("reached herer ")
+  const newMessage = await MessageModel.create(
+    {
+      content: payload.content,
+      sentBy: userId,
+      chatId: chatId,
+    },
+    {
+      include: { all: true },
+    }
+  );
 
+  await ChatModel.update(
+    { lastMessage: newMessage.id },
+    { where: { id: chatId } }
+  );
 
-export const getAvailableUsers = async (userId: MongoId)=>{
-    const chats = await User.find({_id: {$ne: new mongoose.Types.ObjectId(userId)}},"_id name firstName lastName" );
-    return chats;
-}
+  return newMessage;
+};
 
-export const getAllMessages = async (chatId: MongoId)=>{
-    const messages = await Message.find({chatId: new mongoose.Types.ObjectId(chatId)}).populate({path: 'sentBy', select: "_id firstName lastName username email"}).lean();
-    return messages;
-}
+export const getChatIds = async (userId: Identifier) => {
+  const chats = await ChatUserModel.findAll({ where: { userId: userId } });
+  const chatIds = chats.map((chat) => {
+    return chat.id.toString();
+  });
+  return chatIds;
+};
+
+export const getAllChats = async (userId: Identifier) => {
+  const chatIds = getChatIds(userId);
+  const chats = await ChatModel.findAll({
+    where: {
+      id: {
+        [Op.in]: chatIds,
+      },
+    },
+    include:[{
+        model: UserModel,
+        as: 'users',
+        attributes: {
+            exclude: ['password']
+        }
+    }]
+  });
+  return chats;
+};
+
+export const getAvailableUsers = async (userId: Identifier) => {
+  const chats = await UserModel.findAll({
+    where: {
+      id: {
+        [Op.ne]: userId
+      }
+    },
+    attributes: {
+      exclude: ['password']
+    }
+  });
+  return chats;
+};
+
+export const getAllMessages = async (chatId: Identifier) => {
+  const messages = await MessageModel.findAll({
+    where: {
+      chatId: chatId
+    },
+    include: [
+      {
+        model: UserModel,
+        as: 'sentBy',
+        attributes: {
+          exclude: ['password']
+        }
+      }
+    ]
+  })
+  return messages;
+};

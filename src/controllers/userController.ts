@@ -1,4 +1,3 @@
-import {User} from '../models/user.schema';
 import {NextFunction, Request, Response} from "express";
 import { register,login, profile } from '../services/userService'; 
 import { handleCatch, handleResponse } from '../handlers/global.handler';
@@ -26,7 +25,8 @@ export const getProfile = async (req: Request, res: Response): Promise<any>=>{
     if (!req.userData) {
         return res.status(401).json({ message: 'User data not found' });
         }
-        const result = await profile(req.userData._id);
+        console.log("reached here ");
+        const result = await profile(req.userData.id);
         const data = {
             data: result
         }
